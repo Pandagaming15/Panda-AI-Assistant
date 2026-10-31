@@ -1,5 +1,6 @@
 package com.example
 
+import com.example.data.local.MemoryDocumentEntity
 import com.example.data.model.QuickActionsList
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -21,5 +22,22 @@ class ExampleUnitTest {
     assertNotNull(actions.find { it.id == "fix_error" })
     assertNotNull(actions.find { it.id == "aml_plugin" })
     assertNotNull(actions.find { it.id == "crash_log" })
+  }
+
+  @Test
+  fun `verify memory document entity structure`() {
+    val doc = MemoryDocumentEntity(
+      id = "test-1",
+      filename = "Events.h",
+      filePath = "aml-psdk/game_sa/Events.h",
+      category = "SDK Header",
+      content = "class Events { public: static void drawingEvent(); };",
+      summary = "class Events",
+      sizeBytes = 54,
+      isEnabled = true
+    )
+    assertEquals("Events.h", doc.filename)
+    assertTrue(doc.isEnabled)
+    assertTrue(doc.content.contains("drawingEvent"))
   }
 }

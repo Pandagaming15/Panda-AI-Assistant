@@ -124,6 +124,7 @@ fun ChatScreen(
                             .size(32.dp)
                             .clip(CircleShape)
                     )
+                    val docCount by repository.memoryRepository.documentCount.collectAsState(initial = 0)
                     Column {
                         Text(
                             text = "Panda AI Coding Chat",
@@ -132,13 +133,24 @@ fun ChatScreen(
                                 color = Color.White
                             )
                         )
-                        Text(
-                            text = repository.preferences.selectedModel,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = PandaCyanAccent,
-                                fontSize = 11.sp
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = repository.preferences.selectedModel,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = PandaCyanAccent,
+                                    fontSize = 11.sp
+                                )
                             )
-                        )
+                            if (docCount > 0) {
+                                Text(
+                                    text = " • 🧠 $docCount files in memory",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = com.example.ui.theme.PandaGreenAccent,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
             },
@@ -247,9 +259,7 @@ fun ChatScreen(
                                 Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
                             },
                             onRegenerate = {
-                                coroutineScope.launch {
-                                    repository.regenerateLastResponse(coroutineScope)
-                                }
+                                repository.regenerateLastResponse()
                             }
                         )
                     }
@@ -266,7 +276,7 @@ fun ChatScreen(
                 val prompt = inputText.trim()
                 if (prompt.isNotBlank()) {
                     inputText = ""
-                    repository.sendMessage(prompt, coroutineScope)
+                    repository.sendMessage(prompt)
                 }
             },
             onStop = {

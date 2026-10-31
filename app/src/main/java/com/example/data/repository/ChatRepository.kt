@@ -11,9 +11,11 @@ import com.example.data.local.ChatMessageEntity
 import com.example.data.local.ConversationEntity
 import com.example.data.model.AiProviderType
 import com.example.data.pref.AppPreferences
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,6 +47,11 @@ class ChatRepository(
 
     private val conversationDao = database.conversationDao()
     private val messageDao = database.chatMessageDao()
+
+    val memoryRepository = MemoryRepository.getInstance(context)
+
+    // Application/Repository lifecycle scope that survives composable leaves and floating window minimizes
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val geminiClient = GeminiApiClient(
         apiKeyProvider = { preferences.geminiApiKey },
@@ -136,13 +143,14 @@ class ChatRepository(
 
     fun sendMessage(
         userText: String,
-        scope: CoroutineScope,
+        scope: CoroutineScope = repositoryScope,
         onComplete: (() -> Unit)? = null
     ) {
         val trimmed = userText.trim()
         if (trimmed.isBlank() || _isGenerating.value) return
 
-        activeGenerationJob = scope.launch(Dispatchers.IO) {
+        // Always run on repositoryScope so background streaming continues when window minimizes
+        activeGenerationJob = repositoryScope.launch {
             try {
                 _isGenerating.value = true
                 val convId = getOrCreateActiveConversation()
@@ -189,13 +197,21 @@ class ChatRepository(
                     AiProviderType.OPENAI_COMPATIBLE -> openAiClient
                 }
 
+                // Retrieve relevant project knowledge from imported memory database
+                val relevantMemory = memoryRepository.findRelevantKnowledge(trimmed)
+                val fullSystemInstruction = if (relevantMemory.isNotBlank()) {
+                    preferences.systemPrompt + relevantMemory
+                } else {
+                    preferences.systemPrompt
+                }
+
                 val accumulated = StringBuilder()
                 var lastDbUpdateTime = System.currentTimeMillis()
 
                 try {
                     aiService.streamResponse(
                         messages = messagesPayload,
-                        systemInstruction = preferences.systemPrompt,
+                        systemInstruction = fullSystemInstruction,
                         temperature = preferences.temperature
                     ).collect { chunk ->
                         accumulated.append(chunk)
@@ -221,6 +237,19 @@ class ChatRepository(
                         isError = false
                     )
 
+                } catch (e: CancellationException) {
+                    // Cleanly stop streaming on cancellation without recording false errors
+                    if (accumulated.isNotEmpty()) {
+                        messageDao.updateMessageContent(
+                            messageId = modelMsgId,
+                            content = accumulated.toString(),
+                            isStreaming = false,
+                            isError = false
+                        )
+                    } else {
+                        messageDao.deleteMessage(modelMsgId)
+                    }
+                    throw e
                 } catch (e: Exception) {
                     Log.e(TAG, "AI Generation failed: ${e.message}", e)
                     val errMsg = e.message ?: "Failed to generate AI response. Please check your network and API key."
@@ -247,25 +276,26 @@ class ChatRepository(
         }
     }
 
-    suspend fun regenerateLastResponse(scope: CoroutineScope) = withContext(Dispatchers.IO) {
-        val convId = _activeConversationId.value ?: return@withContext
-        val messages = messageDao.getMessagesList(convId)
-        if (messages.isEmpty()) return@withContext
+    fun regenerateLastResponse(scope: CoroutineScope = repositoryScope) {
+        repositoryScope.launch {
+            val convId = _activeConversationId.value ?: return@launch
+            val messages = messageDao.getMessagesList(convId)
+            if (messages.isEmpty()) return@launch
 
-        val lastMsg = messages.last()
-        if (lastMsg.role == "model") {
-            // Delete last model message and re-query
-            messageDao.deleteMessage(lastMsg.id)
-            val remaining = messageDao.getMessagesList(convId)
-            val lastUserMsg = remaining.lastOrNull { it.role == "user" }
-            if (lastUserMsg != null) {
-                // Remove the user message from DB so sendMessage can re-insert cleanly
-                messageDao.deleteMessage(lastUserMsg.id)
-                sendMessage(lastUserMsg.content, scope)
+            val lastMsg = messages.last()
+            if (lastMsg.role == "model") {
+                // Delete last model message and re-query
+                messageDao.deleteMessage(lastMsg.id)
+                val remaining = messageDao.getMessagesList(convId)
+                val lastUserMsg = remaining.lastOrNull { it.role == "user" }
+                if (lastUserMsg != null) {
+                    messageDao.deleteMessage(lastUserMsg.id)
+                    sendMessage(lastUserMsg.content)
+                }
+            } else if (lastMsg.role == "user") {
+                messageDao.deleteMessage(lastMsg.id)
+                sendMessage(lastMsg.content)
             }
-        } else if (lastMsg.role == "user") {
-            messageDao.deleteMessage(lastMsg.id)
-            sendMessage(lastMsg.content, scope)
         }
     }
 }

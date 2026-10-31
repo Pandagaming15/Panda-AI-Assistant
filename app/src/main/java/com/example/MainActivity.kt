@@ -53,12 +53,15 @@ import com.example.ui.theme.TextSecondary
 import kotlinx.coroutines.delay
 
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.Storage
+import com.example.ui.screens.MemoryScreen
 
 sealed class Screen(val index: Int, val title: String, val icon: ImageVector) {
     object Dashboard : Screen(0, "Assistant", Icons.Default.Dashboard)
     object Chat : Screen(1, "Chat", Icons.AutoMirrored.Filled.Chat)
     object AmlToolkit : Screen(2, "AML Toolkit", Icons.Default.Build)
-    object Settings : Screen(3, "Settings", Icons.Default.Settings)
+    object Memory : Screen(3, "Memory", Icons.Default.Storage)
+    object Settings : Screen(4, "Settings", Icons.Default.Settings)
 }
 
 class MainActivity : ComponentActivity() {
@@ -169,18 +172,22 @@ fun MainContent(
                     isServiceRunning = isServiceRunning,
                     onNavigateToChat = { selectedScreen = 1 },
                     onNavigateToAml = { selectedScreen = 2 },
-                    onNavigateToSettings = { selectedScreen = 3 },
+                    onNavigateToMemory = { selectedScreen = 3 },
+                    onNavigateToSettings = { selectedScreen = 4 },
                     onRequestNotificationPermission = onRequestNotificationPermission
                 )
                 1 -> ChatScreen(
                     repository = repository,
-                    onNavigateToSettings = { selectedScreen = 3 }
+                    onNavigateToSettings = { selectedScreen = 4 }
                 )
                 2 -> AmlToolkitScreen(
                     repository = repository,
                     onNavigateToChat = { selectedScreen = 1 }
                 )
-                3 -> SettingsScreen(
+                3 -> MemoryScreen(
+                    memoryRepository = repository.memoryRepository
+                )
+                4 -> SettingsScreen(
                     preferences = preferences,
                     repository = repository
                 )

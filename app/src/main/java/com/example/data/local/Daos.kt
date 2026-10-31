@@ -51,3 +51,42 @@ interface ChatMessageDao {
     @Query("DELETE FROM chat_messages WHERE id = :messageId")
     suspend fun deleteMessage(messageId: String)
 }
+
+@Dao
+interface MemoryDocumentDao {
+    @Query("SELECT * FROM memory_documents ORDER BY filename ASC")
+    fun getAllDocuments(): Flow<List<MemoryDocumentEntity>>
+
+    @Query("SELECT * FROM memory_documents WHERE isEnabled = 1")
+    suspend fun getEnabledDocuments(): List<MemoryDocumentEntity>
+
+    @Query("SELECT * FROM memory_documents WHERE id = :id LIMIT 1")
+    suspend fun getDocumentById(id: String): MemoryDocumentEntity?
+
+    @Query("SELECT COUNT(*) FROM memory_documents")
+    fun getDocumentCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM memory_documents")
+    suspend fun getDocumentCountSync(): Int
+
+    @Query("SELECT * FROM memory_documents WHERE filename LIKE '%' || :query || '%' OR summary LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%' LIMIT 40")
+    suspend fun searchDocuments(query: String): List<MemoryDocumentEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDocument(doc: MemoryDocumentEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDocuments(docs: List<MemoryDocumentEntity>)
+
+    @Update
+    suspend fun updateDocument(doc: MemoryDocumentEntity)
+
+    @Query("UPDATE memory_documents SET isEnabled = :enabled WHERE id = :id")
+    suspend fun setDocumentEnabled(id: String, enabled: Boolean)
+
+    @Query("DELETE FROM memory_documents WHERE id = :id")
+    suspend fun deleteDocument(id: String)
+
+    @Query("DELETE FROM memory_documents")
+    suspend fun clearAllDocuments()
+}

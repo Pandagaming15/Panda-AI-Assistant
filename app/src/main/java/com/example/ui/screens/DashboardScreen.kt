@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -78,6 +79,7 @@ fun DashboardScreen(
     isServiceRunning: Boolean,
     onNavigateToChat: () -> Unit,
     onNavigateToAml: () -> Unit,
+    onNavigateToMemory: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onRequestNotificationPermission: () -> Unit,
     modifier: Modifier = Modifier
@@ -242,6 +244,14 @@ fun DashboardScreen(
             onAction = onNavigateToSettings
         )
 
+        StatusCard(
+            title = "Project Memory & Imported SDK",
+            subtitle = "Indexes C++ headers & symbols into local memory database for AI learning",
+            isConfigured = true,
+            actionLabel = "Open Memory",
+            onAction = onNavigateToMemory
+        )
+
         // Workflow / Quickstart Guide
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -296,11 +306,11 @@ fun DashboardScreen(
         // Quick Navigation Tiles
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             NavTile(
                 title = "In-App Chat",
-                subtitle = "Full screen mode",
+                subtitle = "Full screen",
                 icon = Icons.Default.Code,
                 color = PandaPurplePrimary,
                 modifier = Modifier.weight(1f),
@@ -309,11 +319,20 @@ fun DashboardScreen(
 
             NavTile(
                 title = "AML Toolkit",
-                subtitle = "NDK Templates",
+                subtitle = "Templates",
                 icon = Icons.Default.Security,
                 color = PandaCyanAccent,
                 modifier = Modifier.weight(1f),
                 onClick = onNavigateToAml
+            )
+
+            NavTile(
+                title = "Memory",
+                subtitle = "Files & SDKs",
+                icon = Icons.Default.Storage,
+                color = Color(0xFFF59E0B),
+                modifier = Modifier.weight(1f),
+                onClick = onNavigateToMemory
             )
 
             NavTile(

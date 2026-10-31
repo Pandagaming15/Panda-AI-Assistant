@@ -23,3 +23,17 @@ data class ChatMessageEntity(
     val isStreaming: Boolean = false,
     val isError: Boolean = false
 )
+
+@Entity(tableName = "memory_documents")
+data class MemoryDocumentEntity(
+    @PrimaryKey
+    val id: String,
+    val filename: String,
+    val filePath: String,
+    val category: String, // "SDK Header", "Source Code", "Build Script", "Custom"
+    val content: String,
+    val summary: String, // Extracted symbols/classes/functions for quick search
+    val sizeBytes: Long,
+    val importedAt: Long = System.currentTimeMillis(),
+    val isEnabled: Boolean = true
+)

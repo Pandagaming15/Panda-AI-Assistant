@@ -177,9 +177,7 @@ fun FloatingChatContent(
                                     Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
                                 },
                                 onRegenerate = {
-                                    coroutineScope.launch {
-                                        repository.regenerateLastResponse(coroutineScope)
-                                    }
+                                    repository.regenerateLastResponse()
                                 }
                             )
                         }
@@ -196,7 +194,7 @@ fun FloatingChatContent(
                     val prompt = inputText.trim()
                     if (prompt.isNotBlank()) {
                         inputText = ""
-                        repository.sendMessage(prompt, coroutineScope)
+                        repository.sendMessage(prompt)
                     }
                 },
                 onStop = {
@@ -258,13 +256,25 @@ private fun FloatingChatHeader(
                         fontSize = 14.sp
                     )
                 )
-                Text(
-                    text = repository.preferences.selectedModel,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = PandaCyanAccent,
-                        fontSize = 10.sp
+                val docCount by repository.memoryRepository.documentCount.collectAsState(initial = 0)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = repository.preferences.selectedModel,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = PandaCyanAccent,
+                            fontSize = 10.sp
+                        )
                     )
-                )
+                    if (docCount > 0) {
+                        Text(
+                            text = " • 🧠 $docCount files",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = PandaGreenAccent,
+                                fontSize = 10.sp
+                            )
+                        )
+                    }
+                }
             }
         }
 

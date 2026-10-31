@@ -166,7 +166,7 @@ fun AmlToolkitScreen(
                 0 -> SnippetList(snippets = amlPluginSnippets, onSendToAi = { prompt ->
                     coroutineScope.launch {
                         repository.getOrCreateActiveConversation()
-                        repository.sendMessage(prompt, coroutineScope)
+                        repository.sendMessage(prompt)
                         onNavigateToChat()
                     }
                 })
@@ -174,7 +174,7 @@ fun AmlToolkitScreen(
                 1 -> SnippetList(snippets = hookSnippets, onSendToAi = { prompt ->
                     coroutineScope.launch {
                         repository.getOrCreateActiveConversation()
-                        repository.sendMessage(prompt, coroutineScope)
+                        repository.sendMessage(prompt)
                         onNavigateToChat()
                     }
                 })
@@ -182,7 +182,7 @@ fun AmlToolkitScreen(
                 2 -> SnippetList(snippets = imguiSnippets, onSendToAi = { prompt ->
                     coroutineScope.launch {
                         repository.getOrCreateActiveConversation()
-                        repository.sendMessage(prompt, coroutineScope)
+                        repository.sendMessage(prompt)
                         onNavigateToChat()
                     }
                 })
@@ -190,7 +190,7 @@ fun AmlToolkitScreen(
                 3 -> SnippetList(snippets = buildConfigSnippets, onSendToAi = { prompt ->
                     coroutineScope.launch {
                         repository.getOrCreateActiveConversation()
-                        repository.sendMessage(prompt, coroutineScope)
+                        repository.sendMessage(prompt)
                         onNavigateToChat()
                     }
                 })
@@ -203,7 +203,7 @@ fun AmlToolkitScreen(
                             val prompt = "Analyze this Android native crash / logcat backtrace. Explain what caused the SIGSEGV/fault, which address or register failed, and provide fixed C++ code:\n\n```logcat\n$crashInput\n```"
                             coroutineScope.launch {
                                 repository.getOrCreateActiveConversation()
-                                repository.sendMessage(prompt, coroutineScope)
+                                repository.sendMessage(prompt)
                                 onNavigateToChat()
                             }
                         } else {
