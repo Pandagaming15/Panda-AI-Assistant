@@ -29,7 +29,7 @@ class AppPreferences(context: Context) {
         private const val KEY_AUTO_MINIMIZE = "auto_minimize"
         private const val KEY_ACTIVE_CONVERSATION_ID = "active_conv_id"
 
-        const val DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+        const val DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
         const val DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
         const val DEFAULT_OPENAI_ENDPOINT = "https://api.openai.com/v1"
 
@@ -54,8 +54,17 @@ class AppPreferences(context: Context) {
         set(value) = prefs.edit().putString(KEY_GEMINI_API_KEY, value.trim()).apply()
 
     var selectedModel: String
-        get() = prefs.getString(KEY_SELECTED_MODEL, DEFAULT_GEMINI_MODEL) ?: DEFAULT_GEMINI_MODEL
-        set(value) = prefs.edit().putString(KEY_SELECTED_MODEL, value).apply()
+        get() {
+            val model = prefs.getString(KEY_SELECTED_MODEL, DEFAULT_GEMINI_MODEL) ?: DEFAULT_GEMINI_MODEL
+            val clean = model.removePrefix("models/")
+            return if (clean == "gemini-2.0-flash" || clean == "gemini-2.5-flash" || clean == "gemini-1.5-flash" || clean.isBlank()) {
+                prefs.edit().putString(KEY_SELECTED_MODEL, DEFAULT_GEMINI_MODEL).apply()
+                DEFAULT_GEMINI_MODEL
+            } else {
+                clean
+            }
+        }
+        set(value) = prefs.edit().putString(KEY_SELECTED_MODEL, value.trim().removePrefix("models/")).apply()
 
     var providerType: AiProviderType
         get() {

@@ -287,9 +287,9 @@ fun SettingsScreen(
                     )
 
                     val geminiModels = listOf(
-                        "gemini-2.5-flash" to "Fastest & smart coding (Default)",
-                        "gemini-2.0-flash" to "Low-latency balanced model",
-                        "gemini-1.5-pro" to "High-capacity reasoning"
+                        "gemini-3.8-flash" to "Latest & recommended for coding (Default)",
+                        "gemini-3.0-flash" to "High-speed reasoning model",
+                        "gemini-3.5-pro" to "Advanced deep logic and analysis"
                     )
 
                     for ((modelName, modelDesc) in geminiModels) {

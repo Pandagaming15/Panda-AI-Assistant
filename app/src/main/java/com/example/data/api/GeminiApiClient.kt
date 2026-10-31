@@ -39,7 +39,11 @@ class GeminiApiClient(
         temperature: Float
     ): Flow<String> = callbackFlow {
         val apiKey = apiKeyProvider().trim()
-        val model = modelProvider().trim().ifBlank { "gemini-2.5-flash" }
+        val rawModel = modelProvider().trim().removePrefix("models/")
+        val model = when (rawModel) {
+            "gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash", "" -> "gemini-3.8-flash"
+            else -> rawModel
+        }
 
         if (apiKey.isBlank()) {
             close(IllegalStateException("Gemini API key is not configured. Please enter your API key in Settings."))
@@ -116,7 +120,11 @@ class GeminiApiClient(
         temperature: Float
     ): String = withContext(Dispatchers.IO) {
         val apiKey = apiKeyProvider().trim()
-        val model = modelProvider().trim().ifBlank { "gemini-2.5-flash" }
+        val rawModel = modelProvider().trim().removePrefix("models/")
+        val model = when (rawModel) {
+            "gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash", "" -> "gemini-3.8-flash"
+            else -> rawModel
+        }
 
         if (apiKey.isBlank()) {
             throw IllegalStateException("Gemini API key is not configured. Please enter your API key in Settings.")
