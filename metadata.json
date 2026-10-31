@@ -1,0 +1,6 @@
+{
+  "name": "Panda AI",
+  "description": "Floating AI coding assistant with Gemini integration, overlay window, and specialized AML Compiler / Android NDK programming tools.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
